@@ -34,7 +34,7 @@ The result of the scan is stored by photosdup in two ways:
 
 ## Related work
 
-The approach used for scaling images is inspired by the approach taken in difPy. Unfortunately, difPy could not be used as it does not integrate with the Photos database (minor noisance regarding updating the database) and uses a quadratic algorithm that compares each image to all other images. Nevertheless, the approach described here was a great inspiration:
+The approach used for scaling images is inspired by the approach taken in difPy. Unfortunately, difPy could not be used as it does not integrate with the Photos database (minor nuisance regarding updating the database) and uses a quadratic algorithm that compares each image to all other images. Nevertheless, the approach described here was a great inspiration:
 https://towardsdatascience.com/finding-duplicate-images-with-python-71c04ec8051
 
 The search for duplicates and near duplicates uses a radius query on a KD tree. The SciPy implementation was used as it supports parallelization via multiple threaded workers:
