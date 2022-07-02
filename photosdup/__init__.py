@@ -7,7 +7,6 @@ import photoscript
 import random
 import scipy.spatial
 import skimage.color
-import sklearn.neighbors
 import sys
 
 class Namespace():
