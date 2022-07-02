@@ -1,4 +1,4 @@
-from mpdf import DuplicateFinder, Namespace
+from photosdup import DuplicateFinder, Namespace
 import PySimpleGUI as sg
 import subprocess
 
@@ -9,7 +9,7 @@ def main(args):
     params = [[sg.Text("x-dimension for scaling",size=(60,1)),sg.InputText("50",key="xdim",size=(60,1))],
               [sg.Text("y-dimension for scaling",size=(60,1)),sg.InputText("50",key="ydim",size=(60,1))],
               [sg.Text("radius for similarity search",size=(60,1)),sg.InputText("1000",key="radius",size=(60,1))],
-              [sg.Text("prefix to use for keywords",size=(60,1)),sg.InputText("mpdf",key="prefix",size=(60,1))],
+              [sg.Text("prefix to use for keywords",size=(60,1)),sg.InputText("photosdup",key="prefix",size=(60,1))],
               [sg.Text("maximum number of photos to process (0 is unlimited)",size=(60,1)),sg.InputText("0",key="max",size=(60,1))],
               [sg.Text("size of batches to process",size=(60,1)),sg.InputText("100",key="batch",size=(60,1))]]
     layout = [[sg.Listbox(values=values,size=(125,25),enable_events=True,key="library")],
