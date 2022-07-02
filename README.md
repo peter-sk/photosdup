@@ -2,6 +2,8 @@
 
 **Tool to scan a Mac Photos library for duplicates, thumbnails etc.**
 
+The photosdup tool is available from [PyPI](https://pypi.org/project/photosdup/1.0/):
+
 ```
 pip install photosdup
 ```
