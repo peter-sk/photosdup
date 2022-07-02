@@ -1,4 +1,4 @@
-from mpdf import cli, gui
+from photosdup import cli, gui
 from sys import argv
 
 args = argv[1:]
