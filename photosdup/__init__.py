@@ -57,7 +57,7 @@ class Description():
 
 class DuplicateFinder():
 
-    def __init__(self,library_dir,gui=False):
+    def __init__(self,library_dir,gui=False,batch=1000,cores=-1,max=0):
         if gui:
             from tqdm.gui import tqdm
         else:
@@ -72,53 +72,53 @@ class DuplicateFinder():
         d = Description("gathering all photos from",library_dir)
         with d:
             self.photos = [Photo(filename) for filename in self.tqdm(filenames,desc=d.desc)]
+        self.batch = batch
+        self.cores = cores
+        self.max = max
 
     def _represent(photo):
         return photo.represent((50,50))
 
-    def represent(self, dimension, max=0, batch=1000, cores=-1):
-        if max:
-            self.photos = random.sample(self.photos,k=max)
-        if batch:
+    def represent(self, dimension=(50,50)):
+        if self.max:
+            self.photos = random.sample(self.photos,k=self.max)
+        if self.batch:
             photos = []
             while len(self.photos):
-                photos.append(self.photos[:batch])
-                self.photos = self.photos[batch:]
+                photos.append(self.photos[:self.batch])
+                self.photos = self.photos[self.batch:]
         else:
             photos = [self.photos]
         self.photos = []
-        d = Description("building representations resized to",dimension,("in batches of "+str(batch)) if batch else "")
+        d = Description("building representations resized to",dimension,("in batches of "+str(self.batch)) if self.batch else "")
         with d:
            for ps in self.tqdm(photos,desc=d.desc):
-                if cores == 0:
+                if self.cores == 0:
                     self.photos.extend((DuplicateFinder._represent(p) for p in ps))
                 else:
-                    with multiprocessing.Pool(cores if cores > 0 else None) as p:
+                    with multiprocessing.Pool(self.cores if self.cores > 0 else None) as p:
                         self.photos.extend(p.map(DuplicateFinder._represent,ps))
 
-    #def find(self, metric, radius, prefix, batch=1000):
-    def find(self, radius, prefix, batch=1000, cores=-1):
+    def find(self, radius=1000):
         photos = [photo for photo in self.photos if photo.representation is not None]
         representations = [photo.representation for photo in photos]
         d = Description("building KD tree of",len(representations),"photo representations")
         with d:
             with self.tqdm(desc=d.desc) as pbar:
-                #kdtree = sklearn.neighbors.KDTree(representations,metric=metric)
                 kdtree = scipy.spatial.KDTree(representations)
                 pbar.update(1)
         indexes = []
-        if batch:
+        if self.batch:
             reps = []
             while len(representations):
-                reps.append(representations[:batch])
-                representations = representations[batch:]
+                reps.append(representations[:self.batch])
+                representations = representations[self.batch:]
         else:
             reps = [representations]
-        d = Description("querying KD tree",("in batches of "+str(batch)) if batch else "")
+        d = Description("querying KD tree",("in batches of "+str(self.batch)) if self.batch else "")
         with d:
             for rep in self.tqdm(reps,desc=d.desc):
-                #indexes.extend([list(i) for i in kdtree.query_radius(rep,r=radius)])
-                indexes.extend([list(i) for i in kdtree.query_ball_point(rep,r=radius,workers=cores if cores else 1)])
+                indexes.extend([list(i) for i in kdtree.query_ball_point(rep,r=radius,workers=self.cores if self.cores else 1)])
         classes = []
         d = Description("computing and sorting equivalence classes")
         with d:
@@ -127,13 +127,16 @@ class DuplicateFinder():
                     classes.append(sorted([photos[j] for j in indexes[i]],reverse=True))
                     for index in indexes[i]:
                         indexes[index] = []
+        self.duplicates = classes
+
+    def tag(self, prefix):
         duplicates_folder = photoscript.run_script("_folder_by_name",prefix+"-duplicates",True)
         if duplicates_folder:
             photoscript.run_script("_photoslibrary_delete_folder",duplicates_folder)
         duplicates_folder = photoscript.run_script("_photoslibrary_create_folder",prefix+"-duplicates",None)
         d = Description("tagging duplicate images with keywords")
         with d:
-            for equiv in self.tqdm(classes,desc=d.desc):
+            for equiv in self.tqdm(self.duplicates,desc=d.desc):
                 try:
                     equiv_uuids = [photo.uuid for photo in equiv]
                     equiv_photos = self.library.photos(uuid=equiv_uuids)
