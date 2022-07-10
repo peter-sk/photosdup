@@ -11,8 +11,9 @@ def main(args):
               [sg.Text("radius for similarity search",size=(60,1)),sg.InputText("1000",key="radius",size=(60,1))],
               [sg.Text("prefix to use for keywords",size=(60,1)),sg.InputText("photosdup",key="prefix",size=(60,1))],
               [sg.Text("maximum number of photos to process (0 is unlimited)",size=(60,1)),sg.InputText("0",key="max",size=(60,1))],
-              [sg.Text("size of batches to process",size=(60,1)),sg.InputText("100",key="batch",size=(60,1))]]
-    layout = [[sg.Listbox(values=values,size=(125,25),enable_events=True,key="library")],
+              [sg.Text("size of batches to process",size=(60,1)),sg.InputText("100",key="batch",size=(60,1))],
+              [sg.Text("number of cores to use (-1 is all)",size=(60,1)),sg.InputText("-1",key="cores",size=(60,1))]]
+    layout = [[sg.Listbox(values=values,size=(125,24),enable_events=True,key="library")],
               [sg.Frame("Parameters",layout=params)],
               [scan]]
     window = sg.Window(title="Mac Photos Duplicate Finder",layout=layout,size=(800,500),resizable=True)
@@ -25,7 +26,7 @@ def main(args):
             args = Namespace(values)
             window.close()
             df = DuplicateFinder(args.library[0],gui=True)
-            df.represent(dimension=(int(args.xdim),int(args.ydim)),max=int(args.max),batch=int(args.batch))
-            df.find(radius=float(args.radius),prefix=args.prefix,batch=int(args.batch))
+            df.represent(dimension=(int(args.xdim),int(args.ydim)),max=int(args.max),batch=int(args.batch),cores=int(args.cores))
+            df.find(radius=float(args.radius),prefix=args.prefix,batch=int(args.batch),cores=int(args.cores))
             sg.Popup("To delete duplicates, create a smart album for the keyword "+args.prefix+"-duplicates and delete its contents after careful review.")
             break

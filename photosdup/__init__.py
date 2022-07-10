@@ -76,7 +76,7 @@ class DuplicateFinder():
     def _represent(photo):
         return photo.represent((50,50))
 
-    def represent(self, dimension, max=0, batch=1000):
+    def represent(self, dimension, max=0, batch=1000, cores=-1):
         if max:
             self.photos = random.sample(self.photos,k=max)
         if batch:
@@ -90,11 +90,14 @@ class DuplicateFinder():
         d = Description("building representations resized to",dimension,("in batches of "+str(batch)) if batch else "")
         with d:
            for ps in self.tqdm(photos,desc=d.desc):
-                with multiprocessing.Pool() as p:
-                    self.photos.extend(p.map(DuplicateFinder._represent,ps))
+                if cores == 0:
+                    self.photos.extend((DuplicateFinder._represent(p) for p in ps))
+                else:
+                    with multiprocessing.Pool(cores if cores > 0 else None) as p:
+                        self.photos.extend(p.map(DuplicateFinder._represent,ps))
 
     #def find(self, metric, radius, prefix, batch=1000):
-    def find(self, radius, prefix, batch=1000):
+    def find(self, radius, prefix, batch=1000, cores=-1):
         photos = [photo for photo in self.photos if photo.representation is not None]
         representations = [photo.representation for photo in photos]
         d = Description("building KD tree of",len(representations),"photo representations")
@@ -115,7 +118,7 @@ class DuplicateFinder():
         with d:
             for rep in self.tqdm(reps,desc=d.desc):
                 #indexes.extend([list(i) for i in kdtree.query_radius(rep,r=radius)])
-                indexes.extend([list(i) for i in kdtree.query_ball_point(rep,r=radius,workers=-1)])
+                indexes.extend([list(i) for i in kdtree.query_ball_point(rep,r=radius,workers=cores if cores else 1)])
         classes = []
         d = Description("computing and sorting equivalence classes")
         with d:
