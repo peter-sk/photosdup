@@ -1,5 +1,6 @@
 import argparse
 from photosdup import DuplicateFinder
+from pprint import pprint
 
 def main(argv):
     parser = argparse.ArgumentParser(description="Mac OS Photos Duplicate Finder")
@@ -7,6 +8,7 @@ def main(argv):
     parser.add_argument("--xdim",type=int, default=50, help="horizontal dimension to scale to (default: 50)")
     parser.add_argument("--ydim",type=int, default=50, help="vertical dimension to scale to (default: 50)")
     parser.add_argument("--radius",type=float, default=1000, help="radius for considering images to be duplicates")
+    parser.add_argument("--tag",action="store_true", help="tag duplicats and originals with keywords and create album folder")
     parser.add_argument("--prefix",type=str, default="photosdup", help="prefix for all keywords")
     parser.add_argument("--max",type=int, default="0", help="if non-zero, maximum number of photos to process (default: 0)")
     parser.add_argument("--batch",type=int, default=1000, help="if non-zero, limit the number of photos per query (default: 1000)")
@@ -16,5 +18,8 @@ def main(argv):
     df = DuplicateFinder(args.library_dir,args.gui,args.batch,args.cores,args.max)
     df.represent(dimension=(args.xdim,args.ydim))
     df.find(radius=args.radius)
-    df.tag(prefix=args.prefix)
-    print("INFO: To delete duplicates, create a smart album for the keyword "+args.prefix+"-duplicates and delete its contents after careful review.")
+    if args.tag:
+        df.tag(prefix=args.prefix)
+        print("INFO: To delete duplicates, create a smart album for the keyword "+args.prefix+"-duplicates and delete its contents after careful review.")
+    else:
+        pprint([[photo.path for photo in equiv] for equiv in df.duplicates])
