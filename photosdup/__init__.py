@@ -76,8 +76,8 @@ class DuplicateFinder():
         self.cores = cores
         self.max = max
 
-    def _represent(photo):
-        return photo.represent((50,50))
+    def _represent(self,photo):
+        return photo.represent(self.dimension)
 
     def represent(self, dimension=(50,50)):
         if self.max:
@@ -90,6 +90,7 @@ class DuplicateFinder():
         else:
             photos = [self.photos]
         self.photos = []
+        self.dimension = dimension
         d = Description("building representations resized to",dimension,("in batches of "+str(self.batch)) if self.batch else "")
         with d:
            for ps in self.tqdm(photos,desc=d.desc):
@@ -97,7 +98,7 @@ class DuplicateFinder():
                     self.photos.extend((DuplicateFinder._represent(p) for p in ps))
                 else:
                     with multiprocessing.Pool(self.cores if self.cores > 0 else None) as p:
-                        self.photos.extend(p.map(DuplicateFinder._represent,ps))
+                        self.photos.extend(p.map(self._represent,ps))
 
     def find(self, radius=1000):
         photos = [photo for photo in self.photos if photo.representation is not None]
