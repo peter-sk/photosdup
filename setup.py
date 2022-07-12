@@ -9,7 +9,7 @@ with open(base_dir / "README.md") as f:
 setup(
   name = 'photosdup',
   packages = ['photosdup'],   
-  version = '1.0',
+  version = '1.1',
   license='MIT',        
   description = 'Photos Duplicate finder - searches for duplicate or similar images in a Mac Photos library.', 
   long_description=long_description,
@@ -29,7 +29,7 @@ setup(
           'matplotlib'
       ],
   classifiers=[
-    'Development Status :: 3 - Alpha',      # Chose either "3 - Alpha", "4 - Beta" or "5 - Production/Stable" as the current state of your package
+    'Development Status :: 4 - Beta',      # Chose either "3 - Alpha", "4 - Beta" or "5 - Production/Stable" as the current state of your package
     'Intended Audience :: Developers',      
     'Topic :: Software Development :: Build Tools',
     'License :: OSI Approved :: MIT License',    
