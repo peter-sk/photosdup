@@ -50,10 +50,10 @@ class Description():
         self.desc = " ".join((str(d) for d in desc))
 
     def __enter__(self):
-        print("INFO: BEGINNING",self.desc,file=sys.stdout,flush=True)
+        print("INFO: BEGINNING",self.desc,file=sys.stderr,flush=True)
 
     def __exit__(self,type,value,traceback):
-        print("INFO: FINISHING",self.desc,file=sys.stdout,flush=True)
+        print("INFO: FINISHING",self.desc,file=sys.stderr,flush=True)
 
 class DuplicateFinder():
 
@@ -130,11 +130,25 @@ class DuplicateFinder():
                         indexes[index] = []
         self.duplicates = classes
 
+    def _tag(self,equiv):
+        try:
+            equiv_uuids = [photo.uuid for photo in equiv]
+            equiv_photos = self.library.photos(uuid=equiv_uuids)
+            photo_original = next(equiv_photos)
+            tag = self.prefix+"-uuid-"+photo_original.uuid
+            DuplicateFinder._add_keywords(photo_original,[tag,self.prefix+"-original"])
+            for photo_duplicate in equiv_photos:
+                DuplicateFinder._add_keywords(photo_duplicate,[tag,self.prefix+"-duplicate"])
+            duplicates_album = photoscript.run_script("_photoslibrary_create_album_at_folder", tag, self.duplicates_folder)
+            photoscript.run_script("_album_add",duplicates_album,equiv_uuids)
+        except Exception as e:
+            print("WARNING: failed to tag",equiv,e,file=sys.stderr,flush=True)
+
     def tag(self, prefix):
         duplicates_folder = photoscript.run_script("_folder_by_name",prefix+"-duplicates",True)
         if duplicates_folder:
             photoscript.run_script("_photoslibrary_delete_folder",duplicates_folder)
-        duplicates_folder = photoscript.run_script("_photoslibrary_create_folder",prefix+"-duplicates",None)
+        self.duplicates_folder = photoscript.run_script("_photoslibrary_create_folder",prefix+"-duplicates",None)
         if self.batch:
             duplicates = self.duplicates[:]
             equivs = []
@@ -143,26 +157,20 @@ class DuplicateFinder():
                 duplicates = duplicates[self.batch:]
         else:
             equivs = [self.duplicates]
+        self.prefix = prefix
         d = Description("tagging duplicate images with keywords",("in batches of "+str(self.batch)) if self.batch else "")
         with d:
             for duplicates in self.tqdm(equivs,desc=d.desc):
-                for equiv in duplicates:
-                    try:
-                        equiv_uuids = [photo.uuid for photo in equiv]
-                        equiv_photos = self.library.photos(uuid=equiv_uuids)
-                        photo_original = next(equiv_photos)
-                        tag = prefix+"-uuid-"+photo_original.uuid
-                        DuplicateFinder._add_keywords(photo_original,[tag,prefix+"-original"])
-                        for photo_duplicate in equiv_photos:
-                            DuplicateFinder._add_keywords(photo_duplicate,[tag,prefix+"-duplicate"])
-                        duplicates_album = photoscript.run_script("_photoslibrary_create_album_at_folder", tag, duplicates_folder)
-                        photoscript.run_script("_album_add",duplicates_album,equiv_uuids)
-                    except:
-                        print("WARNING: failed to tag",equiv,file=sys.stdout,flush=True)
+                if self.cores == 0:
+                    for equiv in duplicates:
+                        self._tag(equiv)
+                else:
+                    with multiprocessing.Pool(self.cores if self.cores > 0 else None) as p:
+                        p.map(self._tag,duplicates)
 
     def _add_keywords(photo,new_keywords):
         photo.keywords += new_keywords
         keywords = set(photo.keywords)
         for keyword in new_keywords:
             if keyword not in keywords:
-                print("WARNING: could not tag",photo.uuid,"with keyword",keyword,file=sys.stdout,flush=True)
+                print("WARNING: could not tag",photo.uuid,"with keyword",keyword,file=sys.stderr,flush=True)
