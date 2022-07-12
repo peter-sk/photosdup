@@ -1,2 +1,6 @@
-build
-photosdup.egg-info
+/TODO
+/build
+/dist
+/photosdup.egg-info
+/test
+__pycache__
