@@ -14,12 +14,19 @@ After installation, photosdup can be run by providing it with the directory of t
 ```
 python -m photosdup Pictures/Photos.photoslibrary
 ```
+By default, the command line version prints a list of lists of images, with each interior list representing an original as its first element and its likely duplicates as the remaining elements.
+
+To tag originals and duplicates with keywords and create albums for them instead, you can add the following parameter:
+```
+python -m photosdup Pictures/Photos.photoslibrary --tag
+```
 
 ## Graphical user interface (experimental)
 There is an experimental graphical user interface, which attempts to aid in locating the Photos library and set the parameters (see next section).
 ```
 python -m photosdup --gui
 ``` 
+The graphical user interface always tags originals and duplicates with keywords and creates albums for them.
 
 ## Parameters
 Several parameters such as the dimensions of the scaled down image used for comparison can be provided in both the command line and the graphical user interface. For an explanation and overview, just use the help function.
