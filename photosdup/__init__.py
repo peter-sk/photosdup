@@ -125,9 +125,11 @@ class DuplicateFinder():
         with d:
             for i in self.tqdm(range(len(indexes)),desc=d.desc):
                 if len(indexes[i]) > 1:
-                    classes.append(sorted([photos[j] for j in indexes[i]],reverse=True))
                     for index in indexes[i]:
                         indexes[index] = []
+        num_classes = len(classes)
+        num_duplicates = sum((len(equiv)-1 for equiv in classes))
+        print("INFO: found",num_classes,"classes containing",num_duplicates,"duplicates",file=sys.stderr,flush=True)
         self.duplicates = classes
 
     def _tag(self,equiv):
