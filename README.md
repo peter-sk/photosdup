@@ -21,6 +21,15 @@ To tag originals and duplicates with keywords and create albums for them instead
 python -m photosdup Pictures/Photos.photoslibrary --tag
 ```
 
+## Use as a library
+You can instantiate a DuplicateFinder object by providing the path of the library to scan and using the scan convenience function:
+``
+from photosdup import DuplicateFinder
+df = DuplicateFinder("Picturs/Photos Library.photoslibrary")
+print(df.scan())
+``
+Finer control is available through the functions load, represent, find, and tag. See the implementation of scan for the typical usage.
+
 ## Graphical user interface (experimental)
 There is an experimental graphical user interface, which attempts to aid in locating the Photos library and set the parameters (see next section).
 ```
@@ -33,6 +42,7 @@ Several parameters such as the dimensions of the scaled down image used for comp
 ```
 python -m photosdup --help
 ```
+If the graphical user interface has stability problems, force single core code using 0 for the cores parameter.
 
 ## Result of scan
 The result of the scan is stored by photosdup in two ways:
