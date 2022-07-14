@@ -70,7 +70,15 @@ class DuplicateFinder():
         self.cores = cores
         self.max = max_images
 
-    def scan(self):
+    def scan(self,dimension=(50,50),radius=1000,prefix=None):
+        photos = self.load()
+        rep_photos = self.represent(photos,dimension=dimension)
+        classes = self.find(rep_photos,radius=radius)
+        if prefix is not None:
+            self.tag(classes=classes,prefix=prefix)
+        return classes
+
+    def load(self):
         originals_dir = os.path.join(self.library_dir,"originals")
         filenames_all = (os.path.join(rootname,filename) for rootname, _, filenames in os.walk(originals_dir) for filename in filenames)
         filenames = (filename for filename in filenames_all if filename.split(".")[-1] == "jpeg")
@@ -98,7 +106,7 @@ class DuplicateFinder():
         with d:
            for ps in self.tqdm(photos,desc=d.desc):
                 if self.cores == 0:
-                    rep_photos.extend((DuplicateFinder._represent(p) for p in ps))
+                    rep_photos.extend((DuplicateFinder._represent(p,dimension) for p in ps))
                 else:
                     with multiprocessing.Pool(self.cores if self.cores > 0 else None) as p:
                         rep_photos.extend(p.starmap(DuplicateFinder._represent,zip(ps,itertools.repeat(dimension))))
@@ -154,7 +162,7 @@ class DuplicateFinder():
         except Exception as e:
             print("WARNING: failed to tag",equiv,e,file=sys.stderr,flush=True)
 
-    def tag(self, classes, prefix):
+    def tag(self, classes, prefix="photosdup"):
         library = photoscript.PhotosLibrary()
         library.open(self.library_dir)
         library.activate()
@@ -176,7 +184,7 @@ class DuplicateFinder():
             for duplicates in self.tqdm(equivs,desc=d.desc):
                 if self.cores == 0:
                     for equiv in duplicates:
-                        self._tag(equiv)
+                        DuplicateFinder._tag(equiv,prefix,library,duplicates_folder)
                 else:
                     with multiprocessing.Pool(self.cores if self.cores > 0 else None) as p:
                         p.starmap(DuplicateFinder._tag,zip(duplicates,itertools.repeat(prefix),itertools.repeat(library),itertools.repeat(duplicates_folder)))
