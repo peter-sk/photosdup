@@ -9,7 +9,7 @@ with open(base_dir / "README.md") as f:
 setup(
   name = 'photosdup',
   packages = ['photosdup'],   
-  version = '1.4',
+  version = '1.5',
   license='MIT',        
   description = 'Photos Duplicate finder - searches for duplicate or similar images in a Mac Photos library.', 
   long_description=long_description,
