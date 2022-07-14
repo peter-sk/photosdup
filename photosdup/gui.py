@@ -26,6 +26,7 @@ def main(args):
             args = Namespace(values)
             window.close()
             df = DuplicateFinder(args.library[0],gui=True,batch=int(args.batch),cores=int(args.cores),max=int(args.max))
+            df.scan()
             df.represent(dimension=(int(args.xdim),int(args.ydim)))
             df.find(radius=float(args.radius))
             df.tag(prefix=args.prefix)

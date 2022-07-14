@@ -16,6 +16,7 @@ def main(argv):
     parser.add_argument("--gui",action="store_true", help="show progress using graphical progress bar")
     args = parser.parse_args(argv)
     df = DuplicateFinder(args.library_dir,args.gui,args.batch,args.cores,args.max)
+    df.scan()
     df.represent(dimension=(args.xdim,args.ydim))
     df.find(radius=args.radius)
     if args.tag:
