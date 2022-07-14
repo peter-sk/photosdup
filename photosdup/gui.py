@@ -26,9 +26,9 @@ def main(args):
             args = Namespace(values)
             window.close()
             df = DuplicateFinder(args.library[0],gui=True,batch=int(args.batch),cores=int(args.cores),max=int(args.max))
-            df.scan()
-            df.represent(dimension=(int(args.xdim),int(args.ydim)))
-            df.find(radius=float(args.radius))
-            df.tag(prefix=args.prefix)
+            photos = df.scan()
+            rep_photos = df.represent(photos,dimension=(int(args.xdim),int(args.ydim)))
+            classes = df.find(rep_photos,radius=float(args.radius))
+            df.tag(classes,prefix=args.prefix)
             sg.Popup("To delete duplicates, create a smart album for the keyword "+args.prefix+"-duplicates and delete its contents after careful review.")
             break

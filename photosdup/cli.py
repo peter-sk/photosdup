@@ -16,11 +16,11 @@ def main(argv):
     parser.add_argument("--gui",action="store_true", help="show progress using graphical progress bar")
     args = parser.parse_args(argv)
     df = DuplicateFinder(args.library_dir,args.gui,args.batch,args.cores,args.max)
-    df.scan()
-    df.represent(dimension=(args.xdim,args.ydim))
-    df.find(radius=args.radius)
+    photos = df.scan()
+    rep_photos = df.represent(photos,dimension=(args.xdim,args.ydim))
+    classes = df.find(rep_photos,radius=args.radius)
     if args.tag:
-        df.tag(prefix=args.prefix)
+        df.tag(classes,prefix=args.prefix)
         print("INFO: To delete duplicates, create a smart album for the keyword "+args.prefix+"-duplicates and delete its contents after careful review.")
     else:
-        print(json.dumps([[photo.path for photo in equiv] for equiv in df.duplicates],indent=4))
+        print(json.dumps([[photo.path for photo in equiv] for equiv in classes],indent=4))

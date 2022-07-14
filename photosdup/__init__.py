@@ -76,34 +76,36 @@ class DuplicateFinder():
         filenames = (filename for filename in filenames_all if filename.split(".")[-1] == "jpeg")
         d = Description("gathering all photos from",self.library_dir)
         with d:
-            self.photos = [Photo(filename) for filename in self.tqdm(filenames,desc=d.desc)]
+            photos = [Photo(filename) for filename in self.tqdm(filenames,desc=d.desc)]
+        return photos
 
     def _represent(photo,dimension):
         return photo.represent(dimension)
 
-    def represent(self, dimension=(50,50)):
+    def represent(self, photos, dimension=(50,50)):
         if self.max:
-            self.photos = random.sample(self.photos,k=self.max)
+            photos = random.sample(photos,k=self.max)
         if self.batch:
+            old_photos = photos[:]
             photos = []
-            while len(self.photos):
-                photos.append(self.photos[:self.batch])
-                self.photos = self.photos[self.batch:]
+            while len(old_photos):
+                photos.append(old_photos[:self.batch])
+                old_photos = old_photos[self.batch:]
         else:
-            photos = [self.photos]
-        self.photos = []
+            photos = [photos]
+        rep_photos = []
         d = Description("building representations resized to",dimension,("in batches of "+str(self.batch)) if self.batch else "")
         with d:
            for ps in self.tqdm(photos,desc=d.desc):
                 if self.cores == 0:
-                    self.photos.extend((DuplicateFinder._represent(p) for p in ps))
+                    rep_photos.extend((DuplicateFinder._represent(p) for p in ps))
                 else:
                     with multiprocessing.Pool(self.cores if self.cores > 0 else None) as p:
-                        self.photos.extend(p.starmap(DuplicateFinder._represent,zip(ps,itertools.repeat(dimension))))
+                        rep_photos.extend(p.starmap(DuplicateFinder._represent,zip(ps,itertools.repeat(dimension))))
+        return [photo for photo in rep_photos if photo.representation is not None]
 
-    def find(self, radius=1000):
-        photos = [photo for photo in self.photos if photo.representation is not None]
-        representations = [photo.representation for photo in photos]
+    def find(self, rep_photos, radius=1000):
+        representations = [photo.representation for photo in rep_photos]
         d = Description("building KD tree of",len(representations),"photo representations")
         with d:
             with self.tqdm(desc=d.desc) as pbar:
@@ -132,11 +134,11 @@ class DuplicateFinder():
         d = Description("computing and sorting equivalence classes")
         with d:
             for cc in self.tqdm(list(networkx.connected_components(graph)),desc=d.desc):
-                classes.append(sorted([photos[i] for i in cc],reverse=True))
+                classes.append(sorted([rep_photos[i] for i in cc],reverse=True))
         num_classes = len(classes)
         num_duplicates = sum((len(equiv)-1 for equiv in classes))
         print("INFO: found",num_classes,"classes containing",num_duplicates,"duplicates",file=sys.stderr,flush=True)
-        self.duplicates = classes
+        return classes
 
     def _tag(equiv,prefix,library,duplicates_folder):
         try:
@@ -152,7 +154,7 @@ class DuplicateFinder():
         except Exception as e:
             print("WARNING: failed to tag",equiv,e,file=sys.stderr,flush=True)
 
-    def tag(self, prefix):
+    def tag(self, classes, prefix):
         library = photoscript.PhotosLibrary()
         library.open(self.library_dir)
         library.activate()
@@ -161,7 +163,7 @@ class DuplicateFinder():
             photoscript.run_script("_photoslibrary_delete_folder",duplicates_folder)
         duplicates_folder = photoscript.run_script("_photoslibrary_create_folder",prefix+"-duplicates",None)
         if self.batch:
-            duplicates = self.duplicates[:]
+            duplicates = classes[:]
             equivs = []
             while len(duplicates):
                 equivs.append(duplicates[:self.batch])
