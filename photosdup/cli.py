@@ -1,6 +1,6 @@
 import argparse
+import json
 from photosdup import DuplicateFinder
-from pprint import pprint
 
 def main(argv):
     parser = argparse.ArgumentParser(description="Mac OS Photos Duplicate Finder")
@@ -22,4 +22,4 @@ def main(argv):
         df.tag(prefix=args.prefix)
         print("INFO: To delete duplicates, create a smart album for the keyword "+args.prefix+"-duplicates and delete its contents after careful review.")
     else:
-        pprint([[photo.path for photo in equiv] for equiv in df.duplicates])
+        print(json.dumps([[photo.path for photo in equiv] for equiv in df.duplicates],indent=4))

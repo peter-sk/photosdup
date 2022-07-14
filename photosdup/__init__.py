@@ -1,6 +1,7 @@
 import argparse
 import cv2
 import multiprocessing
+import networkx
 import numpy as np
 import os
 import photoscript
@@ -120,13 +121,18 @@ class DuplicateFinder():
         with d:
             for rep in self.tqdm(reps,desc=d.desc):
                 indexes.extend([list(i) for i in kdtree.query_ball_point(rep,r=radius,workers=self.cores if self.cores else 1)])
+        graph = networkx.Graph()
+        d = Description("computing similarity graph")
+        with d:
+            for i in self.tqdm(range(len(indexes)),desc=d.desc):
+                for j in indexes[i]:
+                    if j != i:
+                        graph.add_edge(i,j)
         classes = []
         d = Description("computing and sorting equivalence classes")
         with d:
-            for i in self.tqdm(range(len(indexes)),desc=d.desc):
-                if len(indexes[i]) > 1:
-                    for index in indexes[i]:
-                        indexes[index] = []
+            for cc in self.tqdm(list(networkx.connected_components(graph)),desc=d.desc):
+                classes.append(sorted([photos[i] for i in cc],reverse=True))
         num_classes = len(classes)
         num_duplicates = sum((len(equiv)-1 for equiv in classes))
         print("INFO: found",num_classes,"classes containing",num_duplicates,"duplicates",file=sys.stderr,flush=True)
