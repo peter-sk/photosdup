@@ -29,8 +29,14 @@ class Photo():
             return False
         return self.uuid < other.uuid
 
+    def __eq__(self,other):
+        return self.uuid == other.uuid
+
     def __repr__(self):
         return "P(%d,%s)" % (self.size, self.uuid)
+
+    def __hash__(self):
+        return hash(self.uuid)
 
     def represent(self,dimension):
         try:
@@ -78,6 +84,27 @@ class DuplicateFinder():
             self.tag(classes=classes,prefix=prefix)
         return classes
 
+    def scan_iterative(self,dimensions=((10,10),(50,50)),radiuses=(200,1000),prefix=None):
+        photos = self.load()
+        photos_set = set(photos)
+        while len(dimensions):
+            print(dimensions,len(dimensions))
+            dimension, dimensions = dimensions[0], dimensions[1:]
+            radius, radiuses = radiuses[0], radiuses[1:]
+            rep_photos = self.represent(list(photos_set),dimension=dimension)
+            classes = self.find(rep_photos,radius=radius)
+            photos_set = {photo for equiv in classes for photo in equiv}
+        if prefix is not None:
+            self.tag(classes=classes,prefix=prefix)
+        return classes
+
+    def humanize(num, separator=" ", suffix="B"):
+        for unit in ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]:
+            if abs(num) < 1024.0:
+                return f"{num:3.1f}{separator}{unit}{suffix}"
+            num /= 1024.0
+        return f"{num:.1f}Yi{suffix}"
+
     def load(self):
         originals_dir = os.path.join(self.library_dir,"originals")
         filenames_all = (os.path.join(rootname,filename) for rootname, _, filenames in os.walk(originals_dir) for filename in filenames)
@@ -85,6 +112,7 @@ class DuplicateFinder():
         d = Description("gathering all photos from",self.library_dir)
         with d:
             photos = [Photo(filename) for filename in self.tqdm(filenames,desc=d.desc)]
+        print("INFO: total amount of data to scan is",DuplicateFinder.humanize(sum((photo.size for photo in photos))),file=sys.stderr,flush=True)
         return photos
 
     def _represent(photo,dimension):
