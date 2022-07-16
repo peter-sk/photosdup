@@ -5,9 +5,9 @@ from photosdup import DuplicateFinder
 def main(argv):
     parser = argparse.ArgumentParser(description="Mac OS Photos Duplicate Finder")
     parser.add_argument("library_dir",type=str, help="Photos library to scan for duplicates and similar images")
-    parser.add_argument("--xdim",type=int, default=50, help="horizontal dimension to scale to (default: 50)")
-    parser.add_argument("--ydim",type=int, default=50, help="vertical dimension to scale to (default: 50)")
-    parser.add_argument("--radius",type=float, default=1000, help="radius for considering images to be duplicates")
+    parser.add_argument("--xdims",type=int, nargs="+", default=[10,50], help="horizontal dimension to scale to (default: 50)")
+    parser.add_argument("--ydims",type=int, nargs="+", default=[10,50], help="vertical dimension to scale to (default: 50)")
+    parser.add_argument("--radiuses",type=float, nargs="+", default=[400,1000], help="radiuses for considering images to be duplicates (default: 400,1000)")
     parser.add_argument("--tag",action="store_true", help="tag duplicats and originals with keywords and create album folder")
     parser.add_argument("--prefix",type=str, default="photosdup", help="prefix for all keywords")
     parser.add_argument("--max",type=int, default="0", help="if non-zero, maximum number of photos to process (default: 0)")
@@ -16,8 +16,7 @@ def main(argv):
     parser.add_argument("--gui",action="store_true", help="show progress using graphical progress bar")
     args = parser.parse_args(argv)
     df = DuplicateFinder(args.library_dir,args.gui,args.batch,args.cores,args.max)
-    #classes = df.scan(dimension=(args.xdim,args.ydim),radius=args.radius,prefix=args.prefix if args.tag else None)
-    classes = df.scan_iterative(prefix=args.prefix if args.tag else None)
+    classes = df.scan(dimensions=tuple(zip(args.xdims,args.ydims)),radiuses=args.radiuses,prefix=args.prefix if args.tag else None)
     print(json.dumps([[photo.path for photo in equiv] for equiv in classes],indent=4))
     if args.tag:
         print("INFO: To delete duplicates, create a smart album for the keyword "+args.prefix+"-duplicates and delete its contents after careful review.")

@@ -76,24 +76,15 @@ class DuplicateFinder():
         self.cores = cores
         self.max = max_images
 
-    def scan(self,dimension=(50,50),radius=1000,prefix=None):
+    def scan(self,dimensions=((10,10),(50,50)),radiuses=(200,1000),prefix=None):
         photos = self.load()
-        rep_photos = self.represent(photos,dimension=dimension)
-        classes = self.find(rep_photos,radius=radius)
-        if prefix is not None:
-            self.tag(classes=classes,prefix=prefix)
-        return classes
-
-    def scan_iterative(self,dimensions=((10,10),(50,50)),radiuses=(200,1000),prefix=None):
-        photos = self.load()
-        photos_set = set(photos)
-        while len(dimensions):
-            print(dimensions,len(dimensions))
+        while dimensions and radiuses:
             dimension, dimensions = dimensions[0], dimensions[1:]
             radius, radiuses = radiuses[0], radiuses[1:]
-            rep_photos = self.represent(list(photos_set),dimension=dimension)
+            rep_photos = self.represent(photos,dimension=dimension)
             classes = self.find(rep_photos,radius=radius)
-            photos_set = {photo for equiv in classes for photo in equiv}
+            if dimensions and radiuses:
+                photos = list({photo for equiv in classes for photo in equiv})
         if prefix is not None:
             self.tag(classes=classes,prefix=prefix)
         return classes

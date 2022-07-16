@@ -5,10 +5,10 @@ import subprocess
 def main(args):
     result = subprocess.run(["mdfind","kMDItemDisplayName == *.photoslibrary"],stdout=subprocess.PIPE)
     values = [val.decode('utf-8') for val in result.stdout.split(b"\n") if val]
-    scan = sg.Button("Scan for duplicates",disabled=False)
-    params = [[sg.Text("x-dimension for scaling",size=(60,1)),sg.InputText("50",key="xdim",size=(60,1))],
-              [sg.Text("y-dimension for scaling",size=(60,1)),sg.InputText("50",key="ydim",size=(60,1))],
-              [sg.Text("radius for similarity search",size=(60,1)),sg.InputText("1000",key="radius",size=(60,1))],
+    scan = sg.Button("Scan for duplicates",disabled=True)
+    params = [[sg.Text("x-dimensions for scaling",size=(60,1)),sg.InputText("10,50",key="xdims",size=(60,1))],
+              [sg.Text("y-dimensions for scaling",size=(60,1)),sg.InputText("10,50",key="ydims",size=(60,1))],
+              [sg.Text("radiuses for similarity search",size=(60,1)),sg.InputText("400,1000",key="radiuses",size=(60,1))],
               [sg.Text("prefix to use for keywords",size=(60,1)),sg.InputText("photosdup",key="prefix",size=(60,1))],
               [sg.Text("maximum number of photos to process (0 is unlimited)",size=(60,1)),sg.InputText("0",key="max",size=(60,1))],
               [sg.Text("size of batches to process",size=(60,1)),sg.InputText("100",key="batch",size=(60,1))],
@@ -26,6 +26,6 @@ def main(args):
             args = Namespace(values)
             window.close()
             df = DuplicateFinder(args.library[0],gui=True,batch=int(args.batch),cores=int(args.cores),max_images=int(args.max))
-            classes = df.scan(dimension=(int(args.xdim),int(args.ydim)),radius=float(args.radius),prefix=args.prefix)
+            classes = df.scan(dimensions=tuple(zip((int(xdim) for xdim in args.xdims.split(",")),(int(ydim) for ydim in args.ydims.split(",")))),radiuses=tuple((float(radius) for radius in args.radiuses.split(","))),prefix=args.prefix)
             sg.Popup("To delete duplicates, create a smart album for the keyword "+args.prefix+"-duplicates and delete its contents after careful review.")
             break
