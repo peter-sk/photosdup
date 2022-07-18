@@ -12,7 +12,9 @@ def main(args):
               [sg.Text("prefix to use for keywords",size=(60,1)),sg.InputText("photosdup",key="prefix",size=(60,1))],
               [sg.Text("maximum number of photos to process (0 is unlimited)",size=(60,1)),sg.InputText("0",key="max",size=(60,1))],
               [sg.Text("size of batches to process",size=(60,1)),sg.InputText("100",key="batch",size=(60,1))],
-              [sg.Text("number of cores to use (-1 is all)",size=(60,1)),sg.InputText("-1",key="cores",size=(60,1))]]
+              [sg.Text("number of cores to use (-1 is all)",size=(60,1)),sg.InputText("-1",key="cores",size=(60,1))],
+              [sg.Text("use thumbnails instead of originals (True/False)",size=(60,1)),sg.InputText("False",key="thumbs",size=(60,1))],
+              [sg.Text("show progress as experimental graphical plots (True/False)"),sg.InputText("False",key="gui",size=(60,1))]]
     layout = [[sg.Listbox(values=values,size=(125,24),enable_events=True,key="library")],
               [sg.Frame("Parameters",layout=params)],
               [scan]]
@@ -26,6 +28,6 @@ def main(args):
             args = Namespace(values)
             window.close()
             df = DuplicateFinder(args.library[0],gui=True,batch=int(args.batch),cores=int(args.cores),max_images=int(args.max))
-            classes = df.scan(dimensions=tuple(zip((int(xdim) for xdim in args.xdims.split(",")),(int(ydim) for ydim in args.ydims.split(",")))),radiuses=tuple((float(radius) for radius in args.radiuses.split(","))),prefix=args.prefix)
+            classes = df.scan(thumbs=bool(args.thumbs),dimensions=tuple(zip((int(xdim) for xdim in args.xdims.split(",")),(int(ydim) for ydim in args.ydims.split(",")))),radiuses=tuple((float(radius) for radius in args.radiuses.split(","))),prefix=args.prefix,gui=eval(args.gui))
             sg.Popup("To delete duplicates, create a smart album for the keyword "+args.prefix+"-duplicates and delete its contents after careful review.")
             break

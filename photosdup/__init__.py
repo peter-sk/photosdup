@@ -17,10 +17,13 @@ class Namespace():
         self.__dict__.update(dict)
 
 class Photo():
-    def __init__(self,path):
+    def __init__(self,path,uuid=None):
         self.path = path
         self.uuid = path.split("/")[-1].split(".")[0]
+        if uuid is not None:
+            self.uuid = uuid(self.uuid)
         self.size = os.stat(path).st_size
+        self.original_path = path
 
     def __lt__(self,other):
         if self.size < other.size:
@@ -76,8 +79,8 @@ class DuplicateFinder():
         self.cores = cores
         self.max = max_images
 
-    def scan(self,dimensions=((10,10),(50,50)),radiuses=(200,1000),prefix=None):
-        photos = self.load()
+    def scan(self,thumbs=False,dimensions=((10,10),(50,50)),radiuses=(200,1000),prefix=None):
+        photos = self.load(thumbs=thumbs)
         while dimensions and radiuses:
             dimension, dimensions = dimensions[0], dimensions[1:]
             radius, radiuses = radiuses[0], radiuses[1:]
@@ -96,13 +99,36 @@ class DuplicateFinder():
             num /= 1024.0
         return f"{num:.1f}Yi{suffix}"
 
-    def load(self):
-        originals_dir = os.path.join(self.library_dir,"originals")
-        filenames_all = (os.path.join(rootname,filename) for rootname, _, filenames in os.walk(originals_dir) for filename in filenames)
+    def _join(self,dirs):
+        return os.path.join(self.library_dir,*dirs)
+
+    def _exists(self,dirs,prefix,suffixes):
+        for suffix in suffixes:
+            original_path = self._join(dirs+[prefix+suffix])
+            if os.path.exists(original_path):
+                return original_path
+        return None
+
+    def load(self,thumbs=False):
+        images_dir = self._join(["resources","derivatives","masters"]) if thumbs else self._join(["originals"])
+        filenames_all = (os.path.join(rootname,filename) for rootname, _, filenames in os.walk(images_dir) for filename in filenames)
         filenames = (filename for filename in filenames_all if filename.split(".")[-1] == "jpeg")
+        if thumbs:
+            def thumbs_remover(s):
+                return s.split("_")[0]
         d = Description("gathering all photos from",self.library_dir)
         with d:
-            photos = [Photo(filename) for filename in self.tqdm(filenames,desc=d.desc)]
+            photos = [Photo(filename,uuid=thumbs_remover if thumbs else None) for filename in self.tqdm(filenames,desc=d.desc)]
+        if thumbs:
+            d = Description("checking whether original exists")
+            new_photos = []
+            for photo in self.tqdm(photos,desc=d.desc):
+                original_path = self._exists(["originals",photo.uuid[0]],photo.uuid,[".jpeg",".heic",".png",".mov",".mp4"])
+                if original_path is not None:
+                    photo.original_path = original_path
+                    new_photos.append(photo)
+            photos = new_photos
+            print("INFO: reduced number of images to",len(photos),file=sys.stderr,flush=True)
         print("INFO: total amount of data to scan is",DuplicateFinder.humanize(sum((photo.size for photo in photos))),file=sys.stderr,flush=True)
         return photos
 
