@@ -102,12 +102,6 @@ class DuplicateFinder():
     def _join(self,dirs):
         return os.path.join(self.library_dir,*dirs)
 
-    def _find_original(self,dirs,prefix):
-        original_paths = glob.glob(self._join(dirs+[prefix+".*"]))
-        if original_paths:
-             return original_paths[0]
-        return None
-
     def load(self,thumbs=False):
         images_dir = self._join(["resources","derivatives","masters"]) if thumbs else self._join(["originals"])
         filenames_all = (os.path.join(rootname,filename) for rootname, _, filenames in os.walk(images_dir) for filename in filenames)
@@ -119,10 +113,15 @@ class DuplicateFinder():
         with d:
             photos = [Photo(filename,uuid=thumbs_remover if thumbs else None) for filename in self.tqdm(filenames,desc=d.desc)]
         if thumbs:
+            d = Description("scanning for originals")
+            with d:
+                originals = (os.path.join(rootname,filename) for rootname, _, filenames in os.walk(self._join(["originals"])) for filename in filenames)
+                originals = {path.split("/")[-1].split(".")[0]:path for path in originals}
+                print(originals)
             d = Description("checking whether original exists")
             new_photos = []
             for photo in self.tqdm(photos,desc=d.desc):
-                original_path = self._find_original(["originals",photo.uuid[0]],photo.uuid)
+                original_path = originals.get(photo.uuid,None)
                 if original_path is not None:
                     photo.original_path = original_path
                     new_photos.append(photo)
