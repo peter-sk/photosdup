@@ -16,6 +16,11 @@ python -m photosdup Pictures/Photos.photoslibrary
 ```
 By default, the command line version prints a list of lists of images, with each interior list representing an original as its first element and its likely duplicates as the remaining elements.
 
+To speed up the scanning considerably, you can scale the precomputed thumbnails instead of the originals:
+```
+python -m photosdup Pictures/Photos.photoslibrary --thumbs
+```
+
 To tag originals and duplicates with keywords and create albums for them instead, you can add the following parameter:
 ```
 python -m photosdup Pictures/Photos.photoslibrary --tag
