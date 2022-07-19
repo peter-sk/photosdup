@@ -1,5 +1,5 @@
-import argparse
 import cv2
+import glob
 import itertools
 import multiprocessing
 import networkx
@@ -102,11 +102,10 @@ class DuplicateFinder():
     def _join(self,dirs):
         return os.path.join(self.library_dir,*dirs)
 
-    def _exists(self,dirs,prefix,suffixes):
-        for suffix in suffixes:
-            original_path = self._join(dirs+[prefix+suffix])
-            if os.path.exists(original_path):
-                return original_path
+    def _find_original(self,dirs,prefix):
+        original_paths = glob.glob(self._join(dirs+[prefix+".*"]))
+        if original_paths:
+             return original_paths[0]
         return None
 
     def load(self,thumbs=False):
@@ -123,7 +122,7 @@ class DuplicateFinder():
             d = Description("checking whether original exists")
             new_photos = []
             for photo in self.tqdm(photos,desc=d.desc):
-                original_path = self._exists(["originals",photo.uuid[0]],photo.uuid,[".jpeg",".heic",".png",".mov",".mp4"])
+                original_path = self._find_original(["originals",photo.uuid[0]],photo.uuid)
                 if original_path is not None:
                     photo.original_path = original_path
                     new_photos.append(photo)
