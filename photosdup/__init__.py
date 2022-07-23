@@ -80,7 +80,8 @@ class Description():
 class DuplicateFinder():
 
     def __init__(self,library_dir,gui=False,batch=1000,cores=-1,max_images=0):
-        self.library_dir = library_dir
+        self.library_dir = library_dir.rstrip(os.sep)
+        self.is_photos = self.library_dir.endswith(".photoslibrary")
         if gui:
             from tqdm.gui import tqdm
         else:
@@ -114,7 +115,7 @@ class DuplicateFinder():
         return os.path.join(self.library_dir,*dirs)
 
     def load(self,thumbs=False):
-        images_dir = self._join(["resources","derivatives","masters"]) if thumbs else self._join(["originals","0"])
+        images_dir = self._join(["resources","derivatives","masters"]) if thumbs else self._join(["originals"])
         filenames = (os.path.join(rootname,filename) for rootname, _, filenames in os.walk(images_dir) for filename in filenames)
         if thumbs:
             def thumbs_remover(s):
