@@ -1,11 +1,11 @@
 import cv2
-import glob
 import itertools
 import multiprocessing
 import networkx
 import numpy as np
 import os
 import photoscript
+import pyheif
 import random
 import scipy.spatial
 import skimage.color
@@ -43,15 +43,26 @@ class Photo():
 
     def represent(self,dimension):
         try:
-            img = cv2.imdecode(np.fromfile(self.path,dtype=np.uint8),cv2.IMREAD_UNCHANGED)
+            img_data = np.fromfile(self.path,dtype=np.uint8)
+            ext = self.path.split(".")[-1]
+            if ext == "heic":
+                heif_file = pyheif.read(img_data)
+                assert(heif_file.mode == "RGB")
+                expected_length = heif_file.size[0]*heif_file.size[1]*3
+                img = np.array(heif_file.data)
+                if len(img) > expected_length:
+                    img = img[:expected_length]
+                img = img.reshape(heif_file.size[1],heif_file.size[0],3)
+            else:
+                img = cv2.imdecode(img_data,cv2.IMREAD_UNCHANGED)
             if type(img) == np.ndarray:
                 img = img[..., 0:3]
                 img = cv2.resize(img,dsize=dimension,interpolation=cv2.INTER_CUBIC)
                 if len(img.shape) == 2:
                     img = skimage.color.gray2rgb(img)
                 self.representation = np.ndarray.flatten(img.astype("float"))
-        except:
-            print("WARNING: could not load and resize",self.path,file=sys.stdout,flush=True)
+        except Exception as e:
+            print("WARNING: could not load and resize",self.path,e,dir(e),file=sys.stdout,flush=True)
             self.representation = None
         return self
 
@@ -103,9 +114,8 @@ class DuplicateFinder():
         return os.path.join(self.library_dir,*dirs)
 
     def load(self,thumbs=False):
-        images_dir = self._join(["resources","derivatives","masters"]) if thumbs else self._join(["originals"])
-        filenames_all = (os.path.join(rootname,filename) for rootname, _, filenames in os.walk(images_dir) for filename in filenames)
-        filenames = (filename for filename in filenames_all if filename.split(".")[-1] == "jpeg")
+        images_dir = self._join(["resources","derivatives","masters"]) if thumbs else self._join(["originals","0"])
+        filenames = (os.path.join(rootname,filename) for rootname, _, filenames in os.walk(images_dir) for filename in filenames)
         if thumbs:
             def thumbs_remover(s):
                 return s.split("_")[0]
@@ -135,7 +145,7 @@ class DuplicateFinder():
 
     def represent(self, photos, dimension=(50,50)):
         if self.max:
-            photos = random.sample(photos,k=self.max)
+            photos = random.sample(photos,k=self.max if self.max < len(photos) else len(photos))
         if self.batch:
             old_photos = photos[:]
             photos = []
