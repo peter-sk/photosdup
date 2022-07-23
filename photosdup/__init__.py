@@ -115,7 +115,16 @@ class DuplicateFinder():
         return os.path.join(self.library_dir,*dirs)
 
     def load(self,thumbs=False):
-        images_dir = self._join(["resources","derivatives","masters"]) if thumbs else self._join(["originals"])
+        if not self.is_photos:
+            images_dirs = []
+            if thumbs:
+                thumbs = False
+                print("WARNING: ignoring thumbs as the supplied directory is not a Mac Photos library directory",self.library_dir,file=sys.stderr,flush=True)
+        elif thumbs:
+            images_dirs = ["resources","derivatives","masters"]
+        else:
+            images_dirs = ["originals"]
+        images_dir = self._join(images_dirs)
         filenames = (os.path.join(rootname,filename) for rootname, _, filenames in os.walk(images_dir) for filename in filenames)
         if thumbs:
             def thumbs_remover(s):
@@ -128,7 +137,6 @@ class DuplicateFinder():
             with d:
                 originals = (os.path.join(rootname,filename) for rootname, _, filenames in os.walk(self._join(["originals"])) for filename in filenames)
                 originals = {path.split("/")[-1].split(".")[0]:path for path in originals}
-                print(originals)
             d = Description("checking whether original exists")
             new_photos = []
             for photo in self.tqdm(photos,desc=d.desc):
@@ -217,6 +225,9 @@ class DuplicateFinder():
             print("WARNING: failed to tag",equiv,e,file=sys.stderr,flush=True)
 
     def tag(self, classes, prefix="photosdup"):
+        if not self.is_photos:
+            print("WARNING: ignoring tag option as the supplied directory is not a Mac Photos library directory",self.library_dir,file=sys.stderr,flush=True)
+            return
         library = photoscript.PhotosLibrary()
         library.open(self.library_dir)
         library.activate()
