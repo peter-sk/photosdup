@@ -8,8 +8,8 @@ The photosdup tool is available from [PyPI](https://pypi.org/project/photosdup/1
 pip install photosdup
 ```
 
-## NEW in 3.0
-This version can also scan arbitrary directories with images that are not in a Mac Photos library. In this case, the --thumbs and --tag options are ignored.
+## NEW in 3.1
+This version can also scan arbitrary directories with images that are not in a Mac Photos library. In this case, the --no-thumbs option is assumed and the --tag options is ignored.
 
 The newest version of Photos Duplicates supports all the image formats of OpenCV plus the HEIC format produced by iPhones.
 
@@ -21,9 +21,10 @@ python -m photosdup Pictures/Photos.photoslibrary
 ```
 By default, the command line version prints a list of lists of images, with each interior list representing an original as its first element and its likely duplicates as the remaining elements.
 
-To speed up the scanning considerably, you can scale the precomputed thumbnails instead of the originals:
+By default, photsdup uses the thumbnails pre-computed by Photos. If this causes any issues or you want to use larger scales, you scan scale originals instead:
 ```
-python -m photosdup Pictures/Photos.photoslibrary --thumbs
+python -m photosdup Pictures/Photos.photoslibrary --no-thumbs
+
 ```
 
 To tag originals and duplicates with keywords and create albums for them instead, you can add the following parameter:
