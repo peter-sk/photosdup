@@ -13,7 +13,7 @@ def main(args):
               [sg.Text("maximum number of photos to process (0 is unlimited)",size=(60,1)),sg.InputText("0",key="max",size=(60,1))],
               [sg.Text("size of batches to process",size=(60,1)),sg.InputText("100",key="batch",size=(60,1))],
               [sg.Text("number of cores to use (-1 is all)",size=(60,1)),sg.InputText("-1",key="cores",size=(60,1))],
-              [sg.Text("use thumbnails instead of originals (True/False)",size=(60,1)),sg.InputText("False",key="thumbs",size=(60,1))],
+              [sg.Text("use thumbnails instead of originals (True/False)",size=(60,1)),sg.InputText("True",key="thumbs",size=(60,1))],
               [sg.Text("show progress as experimental graphical plots (True/False)"),sg.InputText("False",key="gui",size=(60,1))]]
     layout = [[sg.Listbox(values=values,size=(125,24),enable_events=True,key="library")],
               [sg.Frame("Parameters",layout=params)],
