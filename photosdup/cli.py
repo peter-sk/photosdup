@@ -13,11 +13,11 @@ def main(argv):
     parser.add_argument("--max",type=int, default="0", help="if non-zero, maximum number of photos to process (default: 0)")
     parser.add_argument("--batch",type=int, default=1000, help="if non-zero, limit the number of photos per query (default: 1000)")
     parser.add_argument("--cores",type=int, default=-1, help="if -1, use all cores, if 0 a single thread (default: -1)")
-    parser.add_argument("--thumbs",action="store_true", help="use thumbnails instead of originals (default: False)")
+    parser.add_argument("--no-thumbs",action="store_true", help="use originals instead of thumbnails (default: False)")
     parser.add_argument("--gui",action="store_true", help="show progress using graphical progress bar")
     args = parser.parse_args(argv)
     df = DuplicateFinder(args.library_dir,args.gui,args.batch,args.cores,args.max)
-    classes = df.scan(thumbs=args.thumbs,dimensions=tuple(zip(args.xdims,args.ydims)),radiuses=args.radiuses,prefix=args.prefix if args.tag else None)
+    classes = df.scan(thumbs=not args.no_thumbs,dimensions=tuple(zip(args.xdims,args.ydims)),radiuses=args.radiuses,prefix=args.prefix if args.tag else None)
     print(json.dumps([[photo.original_path for photo in equiv] for equiv in classes],indent=4))
     if args.tag:
         print("INFO: To delete duplicates, create a smart album for the keyword "+args.prefix+"-duplicates and delete its contents after careful review.")
