@@ -1,12 +1,17 @@
 # Photos Duplicates (photosdup)
 
-**Tool to scan a Mac Photos library for duplicates, thumbnails etc.**
+**Tool to scan a (Mac) Photos library for duplicates, thumbnails etc.**
 
 The photosdup tool is available from [PyPI](https://pypi.org/project/photosdup/1.0/):
 
 ```
 pip install photosdup
 ```
+
+## NEW in 3.0
+This version can also scan arbitrary directories with images that are not in a Mac Photos library. In this case, the --thumbs and --tag options are ignored.
+
+The newest version of Photos Duplicates supports all the image formats of OpenCV plus the HEIC format produced by iPhones.
 
 ## Command line interface
 After installation, photosdup can be run by providing it with the directory of the Photos library you would like to scan.
