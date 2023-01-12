@@ -172,7 +172,7 @@ class DuplicateFinder():
                 else:
                     with multiprocessing.Pool(self.cores if self.cores > 0 else None) as p:
                         rep_photos.extend(p.starmap(DuplicateFinder._represent,zip(ps,itertools.repeat(dimension))))
-        return [photo for photo in rep_photos if photo.representation is not None]
+        return [photo for photo in rep_photos if hasattr(photo, 'representation') and photo.representation is not None]
 
     def find(self, rep_photos, radius=1000):
         representations = [photo.representation for photo in rep_photos]
@@ -219,8 +219,8 @@ class DuplicateFinder():
             DuplicateFinder._add_keywords(photo_original,[tag,prefix+"-original"])
             for photo_duplicate in equiv_photos:
                 DuplicateFinder._add_keywords(photo_duplicate,[tag,prefix+"-duplicate"])
-            duplicates_album = photoscript.run_script("_photoslibrary_create_album_at_folder", tag, duplicates_folder)
-            photoscript.run_script("_album_add",duplicates_album,equiv_uuids)
+            duplicates_album = photoscript.run_script("photosLibraryCreateAlbumAtFolder", tag, duplicates_folder)
+            photoscript.run_script("albumAdd",duplicates_album,equiv_uuids)
         except Exception as e:
             print("WARNING: failed to tag",equiv,e,file=sys.stderr,flush=True)
 
@@ -231,10 +231,10 @@ class DuplicateFinder():
         library = photoscript.PhotosLibrary()
         library.open(self.library_dir)
         library.activate()
-        duplicates_folder = photoscript.run_script("_folder_by_name",prefix+"-duplicates",True)
+        duplicates_folder = photoscript.run_script("folderByName",prefix+"-duplicates",True)
         if duplicates_folder:
-            photoscript.run_script("_photoslibrary_delete_folder",duplicates_folder)
-        duplicates_folder = photoscript.run_script("_photoslibrary_create_folder",prefix+"-duplicates",None)
+            photoscript.run_script("photosLibraryDeleteFolder",duplicates_folder)
+        duplicates_folder = photoscript.run_script("photosLibraryCreateFolder",prefix+"-duplicates",None)
         if self.batch:
             duplicates = classes[:]
             equivs = []
